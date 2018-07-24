@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "292977286902",
+    "firebase_url": "https://listadmin-byyj.firebaseio.com",
+    "project_id": "listadmin-byyj",
+    "storage_bucket": "listadmin-byyj.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:292977286902:android:6421a38ab2025c69",
+        "android_client_info": {
+          "package_name": "com.listad"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "292977286902-9pkqms5oogtafo3e0sd69jhhq931t8i2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.listad",
+            "certificate_hash": "6e9bda6ce5be41487ba4d14a2deab19071231278"
+          }
+        },
+        {
+          "client_id": "292977286902-tpj24rqo9k6icdvjt7rntikekcg1oalh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsYFwh1hCADTA2xCmJpd8qFxfB91pWm70"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "292977286902-tpj24rqo9k6icdvjt7rntikekcg1oalh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
