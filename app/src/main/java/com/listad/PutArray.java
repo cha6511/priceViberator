@@ -3,5 +3,6 @@ package com.listad;
 import java.util.ArrayList;
 
 public interface PutArray {
-    void resultArray(ArrayList<ItemListData> data);
+    void resultListArray(ArrayList<ItemListData> data);
+    void resultPostArray(ArrayList<PostData> data);
 }

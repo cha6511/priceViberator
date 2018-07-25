@@ -1,6 +1,7 @@
 package com.listad;
 
 public class ItemListData {
+    private String no;
     private String img_url;
     private String name;
     private String type1_price;
@@ -38,8 +39,17 @@ public class ItemListData {
         this.type2_price = type2_price;
     }
 
-    public ItemListData(String img_url, String name, String type1_price, String type2_price) {
+    public String getNo() {
+        return no;
+    }
 
+    public void setNo(String no) {
+        this.no = no;
+    }
+
+    public ItemListData(String no, String img_url, String name, String type1_price, String type2_price) {
+
+        this.no = no;
         this.img_url = img_url;
         this.name = name;
         this.type1_price = type1_price;

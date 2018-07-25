@@ -9,11 +9,23 @@ import android.os.Vibrator;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+import static com.listad.PAGE.LIST;
 
 
 /**
@@ -25,8 +37,9 @@ public class ItemListFragment extends Fragment implements View.OnClickListener {
     ItemListAdapter adapter;
     LinearLayoutManager linearLayoutManager;
 
-    ArrayList<ItemListData> data = new ArrayList<>();
+    ArrayList<ItemListData> listData = new ArrayList<>();
 
+    View v;
     public ItemListFragment() {
         // Required empty public constructor
     }
@@ -36,25 +49,30 @@ public class ItemListFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_item_list, container, false);
-        recyclerView = v.findViewById(R.id.recyclerView);
-        adapter = new ItemListAdapter(data, this, getContext());
-        linearLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(linearLayoutManager);
+        v = inflater.inflate(R.layout.fragment_item_list, container, false);
 
         GetListAsyncTask getListAsyncTask = new GetListAsyncTask(getContext(), new PutArray() {
             @Override
-            public void resultArray(ArrayList<ItemListData> data) {
-                ItemListFragment.this.data = data;
+            public void resultListArray(ArrayList<ItemListData> data) {
+                listData = data;
+
+                recyclerView = v.findViewById(R.id.recyclerView);
+                adapter = new ItemListAdapter(listData, ItemListFragment.this, getContext());
+                linearLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                recyclerView.setAdapter(adapter);
+                recyclerView.setLayoutManager(linearLayoutManager);
                 adapter.notifyDataSetChanged();
+            }
+            @Override
+            public void resultPostArray(ArrayList<PostData> data) {
+
             }
         });
         getListAsyncTask.execute();
 
-        data.add(new ItemListData("", "test", "3,400", "1,200"));
-        adapter.notifyDataSetChanged();
-
+//        data.add(new ItemListData("", "test", "3,400", "1,200"));
+//        adapter.notifyDataSetChanged();
+        PAGE.CURRENT = LIST;
         return v;
     }
 
@@ -114,6 +132,12 @@ public class ItemListFragment extends Fragment implements View.OnClickListener {
     }
 
 
+
+
+
+
+
+
     public class GetListAsyncTask extends AsyncTask<String, String, String> {
         Context context;
         ProgressDialog progressDialog;
@@ -136,22 +160,55 @@ public class ItemListFragment extends Fragment implements View.OnClickListener {
 
         @Override
         protected String doInBackground(String... strings) {
-
-            return null;
+            OkHttpClient client = new OkHttpClient();
+            Request.Builder builder = new Request.Builder();
+            builder.url("http://192.168.1.22/" +
+                    "product/list?" +
+                    "no=0");
+            Request request = builder.build();
+            Response response = null;
+            String myResponse = "";
+            try {
+                response = client.newCall(request).execute();
+                myResponse = response.body().string();
+                return myResponse;
+            } catch (Exception e){
+                e.printStackTrace();
+                return null;
+            }
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            if(TextUtils.isEmpty(s)){
+                Toast.makeText(getContext(), "리스트 로딩 중 에러가 발생하였습니다.", Toast.LENGTH_SHORT).show();
+                if(progressDialog.isShowing()){
+                    progressDialog.dismiss();
+                }
+                return;
+            } else{
+                Log.d("result JSON", s);
+            }
+
+
             ArrayList<ItemListData> tmpArray = new ArrayList<>();
-
-
             try {
-
-
-                putArray.resultArray(tmpArray);
+                JSONArray jsonArray = new JSONArray(s);
+                for(int i = 0 ; i < jsonArray.length() ; i++) {
+                    JSONObject object = jsonArray.getJSONObject(i);
+                    ItemListData data = new ItemListData(
+                            object.getString("no"),
+                            object.getString("img_path"),
+                            object.getString("name"),
+                            object.getString("price"),
+                            object.getString("price1")
+                    );
+                    tmpArray.add(data);
+                }
+                putArray.resultListArray(tmpArray);
             } catch (Exception e) {
-                putArray.resultArray(null);
+                putArray.resultListArray(null);
             }
             if (progressDialog.isShowing())
                 progressDialog.dismiss();
