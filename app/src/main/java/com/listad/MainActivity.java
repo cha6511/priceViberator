@@ -8,6 +8,8 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -28,10 +30,19 @@ public class MainActivity extends AppCompatActivity {
 
     int registerTokenCnt = 0;
 
+    TextView refresh;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        refresh = findViewById(R.id.refresh);
+        refresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(new Intent("refresh"));
+            }
+        });
 
         tabs = findViewById(R.id.tabs);
         pager = findViewById(R.id.pager);
@@ -74,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             OkHttpClient client = new OkHttpClient();
             Request.Builder builder = new Request.Builder();
-            builder.url("ip/push/add?" +
+            builder.url("http://52.78.60.28:3000/push/add?" +
                     "fcm_token=" + strings[0]);
             Request request = builder.build();
             Response response = null;
@@ -96,14 +107,11 @@ public class MainActivity extends AppCompatActivity {
             if(TextUtils.isEmpty(s)){
                 if(registerTokenCnt > 5){
                     Toast.makeText(MainActivity.this, "푸시 서버에 등록하지 못하였습니다.", Toast.LENGTH_SHORT).show();
-                    return;
+                } else {
+                    SendTokenToServer SendTokenToServer = new SendTokenToServer();
+                    SendTokenToServer.execute(FirebaseInstanceId.getInstance().getToken());
+                    registerTokenCnt++;
                 }
-                SendTokenToServer SendTokenToServer = new SendTokenToServer();
-                SendTokenToServer.execute(FirebaseInstanceId.getInstance().getToken());
-                registerTokenCnt++;
-            } else{
-                Toast.makeText(MainActivity.this, "푸시 서버에 등록이 완료되었습니다.", Toast.LENGTH_SHORT).show();
-                return;
             }
         }
     }

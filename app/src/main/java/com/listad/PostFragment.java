@@ -60,7 +60,6 @@ public class PostFragment extends Fragment implements View.OnClickListener{
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_post, container, false);
 
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(receiver, new IntentFilter("close_postDetail"));
 
         frameLayout = v.findViewById(R.id.panel);
 
@@ -94,6 +93,26 @@ public class PostFragment extends Fragment implements View.OnClickListener{
                 recyclerView.setVisibility(View.VISIBLE);
                 frameLayout.setVisibility(View.GONE);
                 PAGE.CURRENT = POST;
+            } else if("refresh".equals(intent.getAction())){
+                GetPostAsyncTask getPostAsyncTask = new GetPostAsyncTask(getContext(), new PutArray() {
+                    @Override
+                    public void resultListArray(ArrayList<ItemListData> data) {
+
+                    }
+                    @Override
+                    public void resultPostArray(ArrayList<PostData> data) {
+
+                        datas = data;
+
+                        recyclerView = v.findViewById(R.id.post_list);
+                        adapter = new PostListAdapter(datas, PostFragment.this);
+                        linearLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                        recyclerView.setAdapter(adapter);
+                        recyclerView.setLayoutManager(linearLayoutManager);
+                        adapter.notifyDataSetChanged();
+                    }
+                });
+                getPostAsyncTask.execute();
             }
         }
     };
@@ -114,6 +133,21 @@ public class PostFragment extends Fragment implements View.OnClickListener{
 
     }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(receiver, new IntentFilter("refresh"));
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(receiver, new IntentFilter("close_postDetail"));
+
+    }
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(receiver);
+    }
 
 
     public class GetPostAsyncTask extends AsyncTask<String, String, String>{
@@ -141,9 +175,7 @@ public class PostFragment extends Fragment implements View.OnClickListener{
         protected String doInBackground(String... strings) {
             OkHttpClient client = new OkHttpClient();
             Request.Builder builder = new Request.Builder();
-            builder.url("http://192.168.1.22/" +
-                    "post/get?" +
-                    "no=0");
+            builder.url("http://52.78.60.28:3000/apps/post");
             Request request = builder.build();
             Response response = null;
             String myResponse = "";

@@ -1,14 +1,19 @@
 package com.listad;
 
+import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -21,49 +26,57 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-
+        Log.d("remoteMessage", remoteMessage.getData().toString());
         sendPushNotification("새 알림 도착", "확인하려면 터치하세요.");
     }
 
-    private int getNotificationIcon() {
-        boolean useWhiteIcon = (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP);
-        return useWhiteIcon ? R.mipmap.ic_launcher_round : R.mipmap.ic_launcher_round;
-    }
 
 
     private void sendPushNotification(String title, String message) {
 
-        Intent intent = new Intent();
-        intent = new Intent(this, MainActivity.class);
-        // 푸쉬를 눌렀을 때 이동할 화면/
-
-        intent.putExtra("click", "refresh");
-
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
+        System.out.println("received message : " + message);
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-                PendingIntent.FLAG_CANCEL_CURRENT);
+                PendingIntent.FLAG_ONE_SHOT);
 
-        //set Sound of Notification
-        notificationBuilder = new NotificationCompat.Builder(getApplicationContext())
-                .setSmallIcon(getNotificationIcon())
-                .setTicker(title)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setAutoCancel(true)
-                .setPriority(Notification.PRIORITY_MAX)
-                .setVibrate(new long[]{0, 1000, 100, 1000})
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                .setContentIntent(pendingIntent);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            NotificationChannel mChannel = new NotificationChannel("my_channel", "yj", NotificationManager.IMPORTANCE_HIGH);
+            Notification notification =
+                    new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.mipmap.logo)
+                            .setContentTitle(title)
+                            .setContentText(message)
+                            .setContentIntent(pendingIntent)
+                            .setAutoCancel(true)
+                            .setChannelId("my_channel").build();
 
-        PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock wakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "PushIdentificator");
-        wakeLock.acquire(3000);
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.createNotificationChannel(mChannel);
 
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+// Issue the notification.
+            mNotificationManager.notify(1 , notification);
 
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        } else{
+            Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.mipmap.logo).setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.logo) )
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setAutoCancel(true)
+                    .setSound(defaultSoundUri).setLights(000000255,500,2000)
+                    .setContentIntent(pendingIntent);
 
-        wakeLock.release();
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+            PowerManager.WakeLock wakelock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "TAG");
+            wakelock.acquire(5000);
+
+            notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        }
     }
+
+
 }
